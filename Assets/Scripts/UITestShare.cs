@@ -2,9 +2,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using OPGames.Share;
 using TMPro;
+using System.Runtime.InteropServices;
 
 public class UITestShare : MonoBehaviour
 {
+    [DllImport("__Internal")]
+    private static extern void JSPasteImgur(string gettext);
+
+    [DllImport("__Internal")]
+    private static extern void JSPasteWebhook(string gettext);
+
 	public TMP_InputField Input;
 	public TMP_InputField InputImgur;
 	public TMP_InputField InputWebhook;
@@ -38,4 +45,11 @@ public class UITestShare : MonoBehaviour
 				ScreenshotToggle.isOn,
 				GetScreenshotArea());
 	}
+
+	public void OnBtnPasteImgur()   { JSPasteImgur("imgur client id"); }
+	public void OnBtnPasteWebhook() { JSPasteWebhook("webhook url"); }
+
+	public void PasteImgur(string str)   { InputImgur.text = str; }
+	public void PasteWebhook(string str) { InputWebhook.text = str; }
+
 }
