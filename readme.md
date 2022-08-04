@@ -2,6 +2,8 @@
 
 [Live demo](https://alto-io.github.io/unity-webgl-share-lego/Builds/WebGL/index.html)
 
+To get this live demo to work, you will need an Imgur Client ID and a Discord Webhook. See the next section how to get these values. When you have them, copy to clipboard and click the Paste button on screen. Simply hitting CTRL+V on your keyboard will not work. This is a known issue for Unity WebGL builds.
+
 ## Getting started
 
 1. Copy `Assets/Scripts/ShareUtil.cs` to your project
