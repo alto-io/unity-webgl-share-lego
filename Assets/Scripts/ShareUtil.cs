@@ -9,8 +9,11 @@ using System.Collections.Generic;
 namespace OPGames.Share
 {
 
+/// This class can be used to easily share to Twitter and Discord. 
+/// This works for Unity WebGL builds.
 public class ShareUtil : MonoBehaviour
 {
+	/// This class is simply for deserializing the JSON response from Imgur api call
 	[System.Serializable]
 	public class ImgurUploadResponse
 	{
@@ -26,27 +29,39 @@ public class ShareUtil : MonoBehaviour
 		public Data data;
 	}
 
+	/// Singleton instance
 	static private ShareUtil _instance = null;
 	static public ShareUtil Instance { get { return _instance; } }
 
 #region Public
+	
+	/// Is the screenshot encoded to a JPG or a PNG?
 	public bool   IsScreenshotJPG = true;
+
+	/// Supply the Imgur Client ID here
+	/// Get a client ID by following the instructions from
+	/// https://apidocs.imgur.com/
 	public string ImgurClientId = "";
 
+	/// Supply the Discord Webhook URL here
+	/// Follow the "Making a Webhook" section of this guide
+	/// https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks
 	public string DiscordWebhook = "";
+
+	/// Username that will be used when posting to Discord
 	public string DiscordUserName = "Discord Bot";
+	
+	/// Public Image URL that will be used as avatar when posting to Discord
 	public string DiscordAvatar = "";
 
-	public void TakeScreenshot(Rect r, Action<Texture2D> onDone)
-	{
-		StartCoroutine(TakeScreenshotCR(r, onDone));
-	}
-
-	// be sure to clean up after use
-	// UnityEngine.Object.Destroy(texture);
+	/// Take a screenshot
+	/// <param name="r">The screenshot rectangle area in screen coordinates</param>
+	/// <param name="onDone">
+	/// This callback will be called when screenshot is done. 
+	/// The Texture2D reference will be passed as parameter
+	/// </param>
 	public IEnumerator TakeScreenshotCR(Rect r, Action<Texture2D> onDone)
 	{
-		Debug.Log($"Capture screenshot area {r}");
 		yield return new WaitForEndOfFrame();
 		Texture2D ss = new Texture2D((int)r.width, (int)r.height, TextureFormat.RGB24, false );
 		ss.ReadPixels(r, 0, 0 );
@@ -56,11 +71,18 @@ public class ShareUtil : MonoBehaviour
 			onDone(ss);
 	}
 
-	public void PostToImgur(Texture2D ss, Action<string> onDone)
+	/// Convenience function for the coroutine TakeScreenshotCR
+	public void TakeScreenshot(Rect r, Action<Texture2D> onDone)
 	{
-		StartCoroutine(PostToImgurCR(ss, onDone));
+		StartCoroutine(TakeScreenshotCR(r, onDone));
 	}
 
+	/// Post the screenshot to Imgur
+	/// <param name="ss">The texture for the screenshot previously captured</param>
+	/// <param name="onDone">
+	/// This callback will be called when posting to Imgur is done. 
+	/// The url of the posted image will be passed as parameter
+	/// </param>
 	public IEnumerator PostToImgurCR(Texture2D ss, Action<string> onDone)
 	{
 		if (ss == null)
@@ -114,6 +136,14 @@ public class ShareUtil : MonoBehaviour
 		if (onDone != null) onDone("");
 	}
 
+	/// Convenience function for the coroutine PostToImgurCR
+	public void PostToImgur(Texture2D ss, Action<string> onDone)
+	{
+		StartCoroutine(PostToImgurCR(ss, onDone));
+	}
+
+	/// Uses the Twitter Web Intent to open up a browser tab pre-filled with a tweet
+	/// https://developer.twitter.com/en/docs/twitter-for-websites/web-intents/overview
 	public void PostToTwitter(string text, string screenshotUrl)
 	{
 		text = HttpUtility.UrlEncode(text);
@@ -132,11 +162,10 @@ public class ShareUtil : MonoBehaviour
 		Application.OpenURL(url);
 	}
 
-	public void PostToTwitter(string text, bool screenshot, Rect r)
-	{
-		StartCoroutine(PostToTwitterCR(text, screenshot, r));
-	}
-
+	/// Convenience function to do all of the following:
+	/// 1. Take a screenshot if needed
+	/// 2. Post screenshot to Imgur
+	/// 3. Open a new tweet pre-filled with the text and screenshot url
 	public IEnumerator PostToTwitterCR(string text, bool screenshot, Rect r)
 	{
 		string screenshotUrl = "";
@@ -150,11 +179,18 @@ public class ShareUtil : MonoBehaviour
 		PostToTwitter(text, screenshotUrl);
 	}
 
-	public void PostToDiscord(string text, bool screenshot, Rect r)
+	/// Convenience function to call PostToTwitterCR
+	public void PostToTwitter(string text, bool screenshot, Rect r)
 	{
-		StartCoroutine(PostToDiscordCR(text, screenshot, r));
+		StartCoroutine(PostToTwitterCR(text, screenshot, r));
 	}
 
+	/// Post to discord by doing the following steps
+	/// 1. Take a screenshot if needed
+	/// 2. Post text and screenshot to Discord
+	/// <param name="text">The text to post</param>
+	/// <param name="screenshot">Do we need to take a screenshot?</param>
+	/// <param name="r">Rectangle area to screenshot, in screen coordinates</param>
 	public IEnumerator PostToDiscordCR(string text, bool screenshot, Rect r)
 	{
 		Texture2D ss = null;
@@ -170,11 +206,25 @@ public class ShareUtil : MonoBehaviour
 		yield return StartCoroutine(PostToDiscordCR(text, DiscordUserName, bytes, filename, null));
 	}
 
-	public void PostToDiscord(string text, string username, byte[] bytes, string filename, Action<bool> onDone)
+	/// Convenience function to call PostToDiscordCR
+	public void PostToDiscord(string text, bool screenshot, Rect r)
 	{
-		StartCoroutine(PostToDiscordCR(text, username, bytes, filename, onDone));
+		StartCoroutine(PostToDiscordCR(text, screenshot, r));
 	}
 
+	/// Post to discord
+	/// <param name="text">The text to post</param>
+	/// <param name="username">Username that will be used when posting</param>
+	/// <param name="bytes">The byte array of the image data</param>
+	/// <param name="filename">
+	///     Filename that will be assigned to the image. This must 
+	///     have the correct extension that corresponds to the image 
+	///     data (i.e. .jpg or .png)
+	/// </param>
+	/// <param name="onDone">
+	///     Callback that will be called when posting is done. Bool 
+	///     parameter to indicate if post was successful or not
+	/// </param>
 	public IEnumerator PostToDiscordCR(string text, string username, byte[] bytes, string filename, Action<bool> onDone)
 	{
 		if (string.IsNullOrEmpty(DiscordWebhook))
@@ -210,11 +260,17 @@ public class ShareUtil : MonoBehaviour
 			onDone(true);
 	}
 
+	/// Convenience function to call PostToDiscordCR
+	public void PostToDiscord(string text, string username, byte[] bytes, string filename, Action<bool> onDone)
+	{
+		StartCoroutine(PostToDiscordCR(text, username, bytes, filename, onDone));
+	}
 
 #endregion // Public
 
 #region Private
 
+	/// Makes sure that there's only one instance of ShareUtil
 	private void Awake()
 	{
 		if (_instance == null)
@@ -227,27 +283,6 @@ public class ShareUtil : MonoBehaviour
 			Destroy(gameObject);
 		}
 	}
-
-
-//	// From relative coordinates [0,1], get actual rect based on screen
-//	public Rect GetSSRectFromRelative(Vector2 topLeft, Vector2 bottomRight)
-//	{
-//		Rect result;
-//		topLeft.x *= Screen.width;
-//		topLeft.y *= Screen.height;
-//
-//		bottomRight.x *= Screen.width;
-//		bottomRight.y *= Screen.height;
-//
-//		return new Rect(
-//				Mathf.Round(topLeft.x),
-//				Mathf.Round(topLeft.y),
-//				Mathf.Round(bottomRight.x - topLeft.x),
-//				Mathf.Round(bottomRight.y - topLeft.y));
-//
-//	}
-
-
 
 #endregion // Private
 }
