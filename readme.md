@@ -8,7 +8,7 @@ To get this live demo to work, you will need an Imgur Client ID and a Discord We
 
 1. Copy `Assets/Scripts/ShareUtil.cs` to your project
 1. Create a new game object and attach the `ShareUtil` component
-1. Fill in the ImgurClientId and DiscordWebhook parameters. These are important
+1. Fill in the ImgurClientId and DiscordWebhook parameters in the inspector. These are important
 	1. Get an Imgur Client Id by following the instructions from [here](https://apidocs.imgur.com/)
 	1. Get a Discord Webhook URL by following the "Making A Webhook" section of this [guide](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
 1. Add a discord avatar image, it should be a publicly accessible image that will be used as an avatar by the webhook when posting in Discord
